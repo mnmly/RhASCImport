@@ -8,6 +8,8 @@ using System.Collections;
 using System.Collections.Generic;
 using Rhino.Geometry;
 using Rhino.UI;
+using Eto.Forms;
+using Eto.Drawing;
 
 namespace MNML
 {
@@ -17,7 +19,7 @@ namespace MNML
         public int xllcorner;
         public int yllcorner;
         public float cellsize;
-        public float NODATA_value;
+        public float NODATA_value = -9999;
     }
 
     ///<summary>
@@ -28,22 +30,21 @@ namespace MNML
     /// attributes in AssemblyInfo.cs (you might need to click "Project" ->
     /// "Show All Files" to see it in the "Solution Explorer" window).</para>
     ///</summary>
-   
+
     public class RhASCImportPlugin : FileImportPlugIn
     {
         ///<summary>Gets the only instance of the RhASCImportPlugin plug-in.</summary>
         public static RhASCImportPlugin Instance { get; private set; }
-        
-        public RhASCImportPlugin()
+
+        public RhASCImportPlugin():base()
         {
             Instance = this;
         }
 
-
         protected override FileTypeList AddFileTypes(FileReadOptions options)
         {
-            var result = new Rhino.PlugIns.FileTypeList();
-            result.AddFileType("Esri ASCII raster format (*.asc)", "asc");            
+            var result = new FileTypeList();
+            result.AddFileType("Esri ASCII raster format (*.asc)", "asc", true);
             return result;
         }
 
@@ -75,21 +76,29 @@ namespace MNML
                 }
                 else {
                     var x = 0;
-                    foreach(var item in components)
+                    foreach (var item in components)
                     {
-                        float z = float.Parse(item);
-                        points.Add(new Point3d(obj.xllcorner + obj.cellsize * x, obj.yllcorner - obj.cellsize * y, z));
+                        float _x = obj.xllcorner + obj.cellsize * x;
+                        float _y = obj.yllcorner - obj.cellsize * y + obj.cellsize * obj.nrows;
+                        float _z = float.Parse(item);
+                        points.Add(new Point3d(_x, _y, _z));
                         x += 1;
                     }
                     y++;
                 }
             }
+
             var importAsPointCloud = true;
             var importAsMesh = true;
 
-            // TODO: Add settings
-            //Settings.TryGetBool(ASCImportOptionPage.KEY_POINTCLOUD, out importAsPointCloud);
-            //Settings.TryGetBool(ASCImportOptionPage.KEY_MESH, out importAsMesh);
+            if (!Settings.TryGetBool(ASCImportOptionPageLayout.KEY_POINTCLOUD, out importAsPointCloud))
+            {   
+                importAsPointCloud = false;
+            }
+
+            if (!Settings.TryGetBool(ASCImportOptionPageLayout.KEY_MESH, out importAsMesh)) {
+                importAsPointCloud = true;
+            }
 
             if (importAsPointCloud)
             {
@@ -124,7 +133,7 @@ namespace MNML
                 mesh.Compact();
                 doc.Objects.AddMesh(mesh);
             }
-           
+
             doc.Views.Redraw();
             file.Close();
             return true;
@@ -138,7 +147,7 @@ namespace MNML
         protected override void DocumentPropertiesDialogPages(RhinoDoc doc, List<OptionsDialogPage> pages)
         {
             var settings = base.Settings;
-            var page = new ASCImportOptionPage(settings);
+            var page = new ASCImportOptionPage("ASC Import Options", settings);
             pages.Add(page);
             base.DocumentPropertiesDialogPages(doc, pages);
         }
@@ -146,13 +155,39 @@ namespace MNML
 
         protected override void DisplayOptionsDialog(IntPtr parent, string description, string extension)
         {
-            //var page = new ASCImportOptionPage(settings);
 
-            var dialog = new Eto.Forms.Dialog();
-            var optionPage = new ASCImportOptionPage(base.Settings);
-            dialog.Content = optionPage.PageControl as Eto.Forms.Control;
+            var layout = new ASCImportOptionPageLayout(Settings);
+
+            var dialog = new Dialog
+            {
+                Padding = new Padding(20),
+                DefaultButton = new Button { Text = "OK" },
+                AbortButton = new Button { Text = "Cancel" },
+                MinimumSize = new Size(300, 120),
+                Resizable = true
+            };
+
+            dialog.Title = "ASC Import Options";
+
+            dialog.DefaultButton.Click += delegate
+            {
+                layout.OnApply();
+                dialog.Close();
+            };
+            dialog.AbortButton.Click += delegate
+            {
+                dialog.Close();
+            };
+
+            var row = new TableRow(
+                new TableCell(dialog.DefaultButton),
+                new TableCell(dialog.AbortButton)
+            );
+            layout.Rows.Add(new TableRow());
+            layout.Rows.Add(row);
+            layout.Rows.Add(new TableRow { ScaleHeight = true });
+            dialog.Content = layout as Control;
             dialog.ShowModal();
-            //base.DisplayOptionsDialog(parent, description, extension);
         }
 
 
@@ -162,7 +197,7 @@ namespace MNML
         protected override void OptionsDialogPages(List<OptionsDialogPage> pages)
         {
             var settings = base.Settings;
-            var page = new ASCImportOptionPage(settings);
+            var page = new ASCImportOptionPage("ASC Import Options", settings);
             pages.Add(page);
             base.OptionsDialogPages(pages);
         }

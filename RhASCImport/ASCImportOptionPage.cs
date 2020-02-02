@@ -1,5 +1,7 @@
 ﻿using System;
 using Eto.Forms;
+using Eto.Drawing;
+
 using Rhino;
 using Rhino.Commands;
 using Rhino.Geometry;
@@ -9,49 +11,56 @@ using Rhino.UI;
 
 namespace MNML
 {
+
+    public class ASCImportOptionPageLayout: TableLayout
+    {
+		public static string KEY_POINTCLOUD = "ASC_IMPORT_PointCloud";
+		public static string KEY_MESH = "ASC_IMPORT_MESH";
+
+		public CheckBox pointCloudCheckBox;
+		public CheckBox meshCheckBox;
+		private PersistentSettings m_Settings;
+
+		public ASCImportOptionPageLayout(PersistentSettings settings): base()
+        {
+			m_Settings = settings;
+
+			Spacing = new Size(5, 5);
+
+		    pointCloudCheckBox = new CheckBox();
+			meshCheckBox = new CheckBox();
+			var row1 = new TableRow(
+				new TableCell(new Label { Text = "Point Cloud" }, true),
+				new TableCell(pointCloudCheckBox, true));
+			var row2 = new TableRow(
+				new TableCell(new Label { Text = "Mesh" }, true),
+				new TableCell(meshCheckBox, true));
+			Rows.Add(row1);
+			Rows.Add(row2);
+		}
+
+        public void OnApply()
+        {
+			m_Settings.SetBool(KEY_MESH, meshCheckBox.Checked.GetValueOrDefault(false));
+			m_Settings.SetBool(KEY_POINTCLOUD, pointCloudCheckBox.Checked.GetValueOrDefault(false));
+		}
+    };
+
 	public class ASCImportOptionPage : OptionsDialogPage
 	{
 		PersistentSettings m_settings;
 
-		public static string KEY_POINTCLOUD = "ASC_IMPORT_PointCloud";
-		public static string KEY_MESH = "ASC_IMPORT_MESH";
-
-
-		public ASCImportOptionPage(Rhino.PersistentSettings settings)
-			: base("ASC")
+		public ASCImportOptionPage(string title, PersistentSettings settings)
+			: base(title)
 		{
 			m_settings = settings;
-
-			if (!m_settings.TryGetChild(KEY_POINTCLOUD, out m_settings))
-            {
-				m_settings.AddChild(KEY_POINTCLOUD);
-				m_settings.SetBool(KEY_POINTCLOUD, true);
-
-			}
-			if (!m_settings.TryGetChild(KEY_MESH, out m_settings))
-			{
-				m_settings.AddChild(KEY_MESH);
-				m_settings.SetBool(KEY_MESH, true);
-
-			}
 		}
 
         public override object PageControl
         {
 			get
 			{
-				var layout = new TableLayout();
-				var pointCloudCheckBox = new CheckBox();
-				var meshCheckBox = new CheckBox();
-				var row1 = new TableRow(
-                    new TableCell(new Label { Text = "Point Cloud" }, true),
-                    new TableCell(pointCloudCheckBox, true));
-				var row2 = new TableRow(
-                    new TableCell(new Label { Text = "Mesh" }, true),
-		            new TableCell(meshCheckBox, true));
-				layout.Rows.Add(row1);
-				layout.Rows.Add(row2);
-
+				var layout = new ASCImportOptionPageLayout(m_settings);
 				return layout;
 			}
 		}
@@ -61,14 +70,8 @@ namespace MNML
 		{
 			try
 			{
-                var layout = (PageControl as TableLayout);
-				var checkbox1 = (layout.Rows[0].Cells[1] as TableCell).Control
-                     as CheckBox;
-				var checkbox2 = (layout.Rows[1].Cells[1] as TableCell).Control
-					 as CheckBox;
-				m_settings.SetBool(KEY_MESH, checkbox1.Checked.GetValueOrDefault(false));
-				m_settings.SetBool(KEY_POINTCLOUD, checkbox2.Checked.GetValueOrDefault(false));
-
+                var layout = (PageControl as ASCImportOptionPageLayout);
+				layout.OnApply();
 				return true;
 			}
 			catch (Exception e)
