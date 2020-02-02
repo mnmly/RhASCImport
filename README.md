@@ -13,3 +13,7 @@
 
 ### In Action
 ![asc-import](https://user-images.githubusercontent.com/317202/73608898-1feec300-45c0-11ea-90b3-03ca66d9c980.png)
+
+
+### Note
+It also generates PointCloud object. Make sure you either hide or delete the point cloud object if you don't use it.
