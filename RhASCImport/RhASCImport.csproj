@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	
+  <PropertyGroup>
+    <TargetFramework>net45</TargetFramework>
+    <RootNamespace>RhASCImport</RootNamespace>
+    <Version>1.0</Version>
+    <Title>RhASCImport</Title>
+    <Description>Description of RhASCImport</Description>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="RhinoCommon" Version="6.16.19190.7001" IncludeAssets="compile;build" />
+  </ItemGroup>
+  
+</Project>
