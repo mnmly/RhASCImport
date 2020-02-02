@@ -1,6 +1,7 @@
 ## ASC Import Plugin for Rhino
 
 ### Installation
+- Download [RhASCImport.rhp](https://github.com/mnmly/RhASCImport/releases)
 - [Mac] Place `RhASCImport.rhp` into `~/Library/Application Support/McNeel/Rhinoceros/MacPlugIns/`
 - [Windows] Compress `RhASCImport.rhp` into zip (`RhASCImport.zip`). Then change the file extension to `.rhi` (`RhASCImport.rhi`). Double click the file, and Rhino should launch the installation wizard.
 
