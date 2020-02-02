@@ -6,6 +6,7 @@
     <Version>1.0</Version>
     <Title>RhASCImport</Title>
     <Description>Description of RhASCImport</Description>
+    <ReleaseVersion>1.0.1</ReleaseVersion>
   </PropertyGroup>
   
   <ItemGroup>
